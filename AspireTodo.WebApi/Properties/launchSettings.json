@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "AspireTodo.WebApi": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:14391;http://localhost:14393"
+    }
+  }
+}

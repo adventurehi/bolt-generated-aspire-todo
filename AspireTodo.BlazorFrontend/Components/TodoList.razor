@@ -1,0 +1,75 @@
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h3" GutterBottom="true">Todo List</MudText>
+
+<MudTextField @bind-Value="newTodoTitle" Label="New Todo" Variant="Variant.Outlined" Class="mb-4" />
+<MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddTodo" Class="mb-4">Add Todo</MudButton>
+
+<MudList>
+    @foreach (var todo in todos)
+    {
+        <MudListItem>
+            <MudCheckBox @bind-Checked="todo.IsCompleted" Color="Color.Primary" />
+            <MudText>@todo.Title</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteTodo(todo.Id)" />
+        </MudListItem>
+    }
+</MudList>
+
+@code {
+    private List<Todo> todos = new();
+    private string newTodoTitle = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTodos();
+    }
+
+    private async Task LoadTodos()
+    {
+        todos = await HttpClient.GetFromJsonAsync<List<Todo>>("api/todos") ?? new();
+    }
+
+    private async Task AddTodo()
+    {
+        if (string.IsNullOrWhiteSpace(newTodoTitle))
+            return;
+
+        var newTodo = new Todo { Title = newTodoTitle };
+        var response = await HttpClient.PostAsJsonAsync("api/todos", newTodo);
+
+        if (response.IsSuccessStatusCode)
+        {
+            newTodoTitle = "";
+            await LoadTodos();
+            Snackbar.Add("Todo added successfully", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Failed to add todo", Severity.Error);
+        }
+    }
+
+    private async Task DeleteTodo(int id)
+    {
+        var response = await HttpClient.DeleteAsync($"api/todos/{id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadTodos();
+            Snackbar.Add("Todo deleted successfully", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Failed to delete todo", Severity.Error);
+        }
+    }
+
+    public class Todo
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public bool IsCompleted { get; set; }
+    }
+}
